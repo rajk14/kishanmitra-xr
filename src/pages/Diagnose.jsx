@@ -74,35 +74,34 @@ const Diagnose = () => {
       setDiagnosis(result);
       useAppStore.getState().setCurrentDiagnosis(result);
 
-      // Save to Supabase
+      // Save to Supabase (Non-blocking)
       if (isSignedIn && clerkUser) {
-        try {
-          const { error: dbError } = await supabase
-            .from('scans')
-            .insert([{
-              user_id: clerkUser.id,
-              crop_name: result.crop_name,
-              disease_name: result.disease_name,
-              confidence: result.confidence,
-              severity: result.severity,
-              image_url: image, 
-              diagnosis_data: result
-            }]);
-          
-          if (dbError) throw dbError;
-          console.log('Scan saved to history');
-        } catch (dbErr) {
-          console.error('Supabase Save Error:', dbErr);
-          // Show a subtle warning if DB save fails
-          setError(language === 'hi' ? `इतिहास सुरक्षित नहीं हो सका: ${dbErr.message}` : `Could not save to history: ${dbErr.message}`);
-        }
+        supabase
+          .from('scans')
+          .insert([{
+            user_id: clerkUser.id,
+            crop_name: result.crop_name,
+            disease_name: result.disease_name,
+            confidence: result.confidence,
+            severity: result.severity,
+            image_url: image, 
+            diagnosis_data: result
+          }])
+          .then(({ error: dbError }) => {
+            if (dbError) {
+              console.warn('Supabase Save failed but result is shown:', dbError);
+            } else {
+              console.log('Scan saved to history');
+              addHistory({
+                ...result,
+                id: Date.now(),
+                image,
+                timestamp: new Date().toISOString()
+              });
+            }
+          })
+          .catch(err => console.error('Supabase async error:', err));
       }
-
-      addHistory({
-        ...result,
-        id: Date.now(),
-        image,
-        timestamp: new Date().toISOString()
       });
     } catch (err) {
       console.error(err);
