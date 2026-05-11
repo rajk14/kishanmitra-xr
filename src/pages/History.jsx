@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/appStore';
 import { translations } from '../i18n/translations';
-import { Calendar, ChevronRight, Shield, AlertTriangle, Info } from 'lucide-react';
+import { Calendar, ChevronRight, Shield, AlertTriangle, Info, ShieldCheck, Terminal } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ const History = () => {
   const [dbHistory, setDbHistory] = React.useState([]);
   const [fetching, setFetching] = React.useState(true);
   const [error, setError] = React.useState(null);
+  const [debugInfo, setDebugInfo] = React.useState(null);
   const t = translations[language];
   const navigate = useNavigate();
 
@@ -26,15 +27,22 @@ const History = () => {
 
     setFetching(true);
     setError(null);
+    setDebugInfo(null);
 
     try {
+      console.log('Testing Supabase Connection...');
+      
+      // Detailed Fetch to catch exact issue
       const { data, error: dbError } = await supabase
         .from('scans')
         .select('*')
         .eq('user_id', clerkUser.id)
         .order('created_at', { ascending: false });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        setDebugInfo(JSON.stringify(dbError, null, 2));
+        throw dbError;
+      }
       
       const formattedData = data.map(scan => ({
         ...scan.diagnosis_data,
@@ -45,16 +53,25 @@ const History = () => {
       
       setDbHistory(formattedData);
     } catch (err) {
-      console.error('Fetch Error:', err);
+      console.error('Full Error Object:', err);
       setError(err.message);
+      
+      // Provide more context for "Failed to fetch"
+      if (err.message === 'Failed to fetch') {
+        setDebugInfo(`URL: ${import.meta.env.VITE_SUPABASE_URL}\nCheck if your browser is blocking this URL. Try opening this URL in a new tab to see if it loads.`);
+      }
     } finally {
       setFetching(false);
     }
   };
 
   React.useEffect(() => {
-    fetchHistory();
-  }, [isSignedIn, clerkUser]);
+    if (isLoaded && isSignedIn) {
+      fetchHistory();
+    } else if (isLoaded && !isSignedIn) {
+      setFetching(false);
+    }
+  }, [isLoaded, isSignedIn]);
 
   const getSeverityColor = (sev) => {
     switch (sev) {
@@ -107,24 +124,65 @@ const History = () => {
       </div>
 
       {error && (
-        <div className="p-4 mb-8 bg-danger/10 border border-danger/20 rounded-xl text-danger flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <AlertTriangle size={20} />
-            <div>
-              <p className="font-bold">{language === 'hi' ? 'डेटा लोड करने में समस्या' : 'Error Loading History'}</p>
-              <p className="text-sm opacity-80">{error}</p>
+        <div className="space-y-6 mb-12">
+          <div className="p-4 bg-danger/10 border border-danger/20 rounded-xl text-danger flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle size={20} />
+              <div>
+                <p className="font-bold">{language === 'hi' ? 'डेटा लोड करने में समस्या' : 'Error Loading History'}</p>
+                <p className="text-sm opacity-80">{error}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => fetchHistory()}
+              className="px-4 py-2 bg-danger text-white rounded-lg text-sm font-bold hover:bg-danger/80 transition-colors"
+            >
+              {language === 'hi' ? 'दोबारा कोशिश करें' : 'Retry'}
+            </button>
+          </div>
+
+          {debugInfo && (
+            <div className="bg-black/50 p-6 rounded-2xl border border-white/10 font-mono text-xs text-secondary overflow-auto max-h-48">
+              <div className="flex items-center gap-2 mb-2 text-white/50 uppercase tracking-tighter">
+                <Terminal size={12} />
+                Debug Console
+              </div>
+              <pre>{debugInfo}</pre>
+            </div>
+          )}
+
+          <div className="glass-card p-8 border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-3 mb-6">
+              <ShieldCheck className="text-primary" size={24} />
+              <h3 className="text-xl font-bold">{language === 'hi' ? 'नेटवर्क समस्या कैसे ठीक करें?' : 'How to fix Network issues?'}</h3>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 text-xs font-bold">1</div>
+                  <p className="text-sm">{language === 'hi' ? 'ब्राउज़र में Ad-Blocker या Privacy extensions को बंद करें।' : 'Disable Ad-Blockers or Privacy extensions in your browser.'}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 text-xs font-bold">2</div>
+                  <p className="text-sm">{language === 'hi' ? 'Supabase Dashboard में चेक करें कि प्रोजेक्ट Paused तो नहीं है।' : 'Check if your Supabase project is Paused in the dashboard.'}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 text-xs font-bold">3</div>
+                  <p className="text-sm">{language === 'hi' ? 'incognito मोड में चलाकर देखें।' : 'Try opening the app in Incognito mode.'}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 text-xs font-bold">4</div>
+                  <p className="text-sm">{language === 'hi' ? 'इंटरनेट कनेक्शन बदलें या VPN बंद करें।' : 'Switch internet connection or disable VPN.'}</p>
+                </div>
+              </div>
             </div>
           </div>
-          <button 
-            onClick={() => fetchHistory()}
-            className="px-4 py-2 bg-danger text-white rounded-lg text-sm font-bold hover:bg-danger/80 transition-colors"
-          >
-            {language === 'hi' ? 'दोबारा कोशिश करें' : 'Retry'}
-          </button>
         </div>
       )}
 
-      {dbHistory.length === 0 ? (
+      {dbHistory.length === 0 && !error ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center text-muted mb-6 border border-border">
             <Calendar size={48} className="opacity-20" />

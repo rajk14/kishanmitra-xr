@@ -22,8 +22,12 @@ Analyze the crop image and provide a JSON response with the following structure:
   "medicine": { "name": "string", "dose": "string", "frequency": "string" },
   "organic_option": "string",
   "treatment": ["step 1", "step 2", "step 3"],
-  "voice_summary": "Short 2-line summary in Hindi for audio playback"
+  "voice_summary": "Short 2-line summary in Hindi for audio playback",
+  "disease_area": [
+    { "x": number, "y": number, "width": number, "height": number, "label": "string" }
+  ]
 }
+For "disease_area", provide 1-3 rectangular bounding boxes (0-100 scale) where you detect issues for XR visualization.
 If it's not a crop, set is_crop to false. Use Hindi for text fields if possible.`;
 
 export const diagnoseCrop = async (image, source = 'cloud', config = {}) => {
@@ -31,7 +35,6 @@ export const diagnoseCrop = async (image, source = 'cloud', config = {}) => {
     // Priority 1: Direct Google Gemini SDK
     if (genAI) {
       try {
-        // Use gemini-1.5-flash as default for vision
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const base64Data = image.split(",")[1];
         const imagePart = {
@@ -46,11 +49,9 @@ export const diagnoseCrop = async (image, source = 'cloud', config = {}) => {
       }
     }
 
-    // Priority 2: OpenRouter with a very stable model ID
+    // Priority 2: OpenRouter
     try {
-      // Use a more stable ID or the one selected by user
       let modelId = config.cloudModel || "google/gemini-2.0-flash-001";
-      if (modelId.includes('lite-preview')) modelId = "google/gemini-2.0-flash-001"; // Safety override for outdated IDs
       
       const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", {
         model: modelId,
