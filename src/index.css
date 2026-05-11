@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text font-body antialiased selection:bg-primary/30;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl;
+  }
+
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+
+  .animate-spin-hover:hover {
+    animation: spin 2s linear infinite;
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4), 0 0 40px rgba(0, 255, 136, 0.1);
+  }
+
+  .btn-primary {
+    @apply bg-primary text-background font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 neon-glow flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent text-primary border border-primary/30 font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:bg-primary/10 flex items-center justify-center gap-2;
+  }
+
+  .scan-line {
+    @apply absolute w-full h-[2px] bg-primary/60 shadow-[0_0_15px_rgba(0,255,136,0.8)] z-10 animate-scan;
+  }
+
+  .grid-overlay {
+    background-image: 
+      linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-surface border-2 border-background rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted;
+}
