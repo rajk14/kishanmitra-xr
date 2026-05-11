@@ -16,8 +16,14 @@ export const useAppStore = create(
       localModel: 'llama3.2-vision',
       setLocalModel: (model) => set({ localModel: model }),
 
-      user: null, // { email, name }
-      plan: null, // 'free' | 'basic' | 'pro'
+      // Custom API Keys
+      customGeminiKey: '',
+      setCustomGeminiKey: (key) => set({ customGeminiKey: key }),
+      customOpenRouterKey: '',
+      setCustomOpenRouterKey: (key) => set({ customOpenRouterKey: key }),
+
+      user: null, 
+      plan: null, 
       login: (userData) => set({ user: userData }),
       logout: () => set({ user: null, plan: null }),
       setPlan: (planId) => set({ plan: planId }),
@@ -45,7 +51,9 @@ export const useAppStore = create(
         history: state.history,
         aiSource: state.aiSource,
         cloudModel: state.cloudModel,
-        localModel: state.localModel
+        localModel: state.localModel,
+        customGeminiKey: state.customGeminiKey,
+        customOpenRouterKey: state.customOpenRouterKey
       }),
     }
   )

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Cpu, Cloud, Check } from 'lucide-react';
+import { X, Cpu, Cloud, Check, Key, ShieldCheck, Zap } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 
 const CLOUD_MODELS = [
@@ -32,9 +32,12 @@ const LOCAL_MODELS = [
 
 const SettingsModal = ({ isOpen, onClose }) => {
   const { 
+    language, setLanguage,
     aiSource, setAiSource, 
     cloudModel, setCloudModel, 
-    localModel, setLocalModel 
+    localModel, setLocalModel,
+    customGeminiKey, setCustomGeminiKey,
+    customOpenRouterKey, setCustomOpenRouterKey
   } = useAppStore();
 
   return (
@@ -63,27 +66,64 @@ const SettingsModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
-            <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               {/* Language Selection */}
               <div>
-                <h3 className="text-sm font-bold text-muted uppercase tracking-widest mb-4">Language / भाषा</h3>
+                <h3 className="text-sm font-bold text-muted uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Zap size={14} className="text-primary" />
+                  Language / भाषा
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={() => useAppStore.getState().setLanguage('en')}
+                    onClick={() => setLanguage('en')}
                     className={`p-3 rounded-xl border transition-all font-bold ${
-                      useAppStore.getState().language === 'en' ? 'bg-primary/10 border-primary text-primary' : 'bg-surface border-border text-muted'
+                      language === 'en' ? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10' : 'bg-surface border-border text-muted'
                     }`}
                   >
                     English
                   </button>
                   <button
-                    onClick={() => useAppStore.getState().setLanguage('hi')}
+                    onClick={() => setLanguage('hi')}
                     className={`p-3 rounded-xl border transition-all font-bold ${
-                      useAppStore.getState().language === 'hi' ? 'bg-primary/10 border-primary text-primary' : 'bg-surface border-border text-muted'
+                      language === 'hi' ? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10' : 'bg-surface border-border text-muted'
                     }`}
                   >
                     हिन्दी
                   </button>
+                </div>
+              </div>
+
+              {/* Custom API Configuration */}
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-6">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                  <Key size={14} />
+                  Custom API Keys (Optional)
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted uppercase mb-1 block">Google Gemini API Key</label>
+                    <input 
+                      type="password"
+                      value={customGeminiKey}
+                      onChange={(e) => setCustomGeminiKey(e.target.value)}
+                      placeholder="Paste your Gemini key here..."
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-sm focus:border-primary outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted uppercase mb-1 block">OpenRouter API Key</label>
+                    <input 
+                      type="password"
+                      value={customOpenRouterKey}
+                      onChange={(e) => setCustomOpenRouterKey(e.target.value)}
+                      placeholder="Paste your OpenRouter key here..."
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-sm focus:border-primary outline-none transition-all"
+                    />
+                  </div>
+                  <div className="flex items-start gap-2 text-[10px] text-muted leading-tight">
+                    <ShieldCheck size={12} className="text-success mt-0.5" />
+                    <span>Keys are stored locally in your browser and never shared with our servers.</span>
+                  </div>
                 </div>
               </div>
 
@@ -94,7 +134,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                   <button
                     onClick={() => setAiSource('cloud')}
                     className={`flex flex-col items-center gap-3 p-4 rounded-xl border transition-all ${
-                      aiSource === 'cloud' ? 'bg-primary/10 border-primary text-primary' : 'bg-surface border-border text-muted'
+                      aiSource === 'cloud' ? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10' : 'bg-surface border-border text-muted'
                     }`}
                   >
                     <Cloud size={24} />
@@ -103,7 +143,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                   <button
                     onClick={() => setAiSource('local')}
                     className={`flex flex-col items-center gap-3 p-4 rounded-xl border transition-all ${
-                      aiSource === 'local' ? 'bg-primary/10 border-primary text-primary' : 'bg-surface border-border text-muted'
+                      aiSource === 'local' ? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10' : 'bg-surface border-border text-muted'
                     }`}
                   >
                     <Cpu size={24} />

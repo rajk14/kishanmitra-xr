@@ -1,12 +1,7 @@
 import axios from 'axios';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const OLLAMA_URL = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434/api/chat';
-
-// Initialize Gemini SDK
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 const SYSTEM_PROMPT = `You are KisanMitra AI, an expert agriculture diagnostic system. 
 Analyze the crop image and provide a JSON response with the following structure:
@@ -31,10 +26,15 @@ For "disease_area", provide 1-3 rectangular bounding boxes (0-100 scale) where y
 If it's not a crop, set is_crop to false. Use Hindi for text fields if possible.`;
 
 export const diagnoseCrop = async (image, source = 'cloud', config = {}) => {
+  // Use custom keys if provided in config, otherwise fallback to env
+  const geminiKey = config.customGeminiKey || import.meta.env.VITE_GEMINI_API_KEY;
+  const openRouterKey = config.customOpenRouterKey || import.meta.env.VITE_OPENROUTER_API_KEY;
+
   if (source === 'cloud') {
     // Priority 1: Direct Google Gemini SDK
-    if (genAI) {
+    if (geminiKey) {
       try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const base64Data = image.split(",")[1];
         const imagePart = {
@@ -69,7 +69,7 @@ export const diagnoseCrop = async (image, source = 'cloud', config = {}) => {
         response_format: { type: "json_object" }
       }, {
         headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Authorization": `Bearer ${openRouterKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer": "https://kisanmitra-ai.vercel.app",
           "X-Title": "KisanMitra AI"
@@ -104,14 +104,18 @@ export const diagnoseCrop = async (image, source = 'cloud', config = {}) => {
 };
 
 export const chatWithKisanMitra = async (message, history = [], source = 'cloud', config = {}) => {
+  const geminiKey = config.customGeminiKey || import.meta.env.VITE_GEMINI_API_KEY;
+  const openRouterKey = config.customOpenRouterKey || import.meta.env.VITE_OPENROUTER_API_KEY;
+
   const CHAT_SYSTEM_PROMPT = `You are KisanMitra AI, a helpful agriculture assistant. 
   Answer the farmer's questions about crops, diseases, fertilizers, and farming techniques. 
   Current Diagnosis Context: ${JSON.stringify(config.currentDiagnosis || 'None')}
   Keep answers practical and in Hindi/English mix.`;
 
   if (source === 'cloud') {
-    if (genAI) {
+    if (geminiKey) {
       try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const chat = model.startChat({
           history: history.map(h => ({
@@ -135,7 +139,7 @@ export const chatWithKisanMitra = async (message, history = [], source = 'cloud'
         reasoning: { enabled: true }
       }, {
         headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Authorization": `Bearer ${openRouterKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer": "https://kisanmitra-ai.vercel.app",
           "X-Title": "KisanMitra AI"

@@ -18,7 +18,8 @@ const Diagnose = () => {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
   const { 
     language, addHistory, setScanning, isScanning, 
-    aiSource, cloudModel, localModel, plan 
+    aiSource, cloudModel, localModel, plan,
+    customGeminiKey, customOpenRouterKey
   } = useAppStore();
   const t = translations[language];
   
@@ -29,7 +30,7 @@ const Diagnose = () => {
 
   const handleUploadClick = () => {
     if (!isSignedIn) {
-      alert(language === 'hi' ? "कृपया पहले लॉगिन करें।" : "Please login first.");
+      alert(language === 'hi' ? "कृपया पहले लॉगिन करें。" : "Please login first.");
       return;
     }
     fileInputRef.current.click();
@@ -57,7 +58,12 @@ const Diagnose = () => {
     setError(null);
 
     try {
-      const result = await diagnoseCrop(image, aiSource, { cloudModel, localModel });
+      const result = await diagnoseCrop(image, aiSource, { 
+        cloudModel, 
+        localModel,
+        customGeminiKey,
+        customOpenRouterKey
+      });
       
       if (!result.is_crop) {
         setError(language === 'hi' ? "यह फसल की तस्वीर नहीं लग रही है।" : "This doesn't look like a crop image.");
